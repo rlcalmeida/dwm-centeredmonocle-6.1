@@ -1,0 +1,58 @@
+diff --git a/dwm-6.1/config.def.h b/dwm-centeredmonocle-6.1/config.def.h
+index 7054c06..45d2dca 100644
+--- a/dwm-6.1/config.def.h
++++ b/dwm-centeredmonocle-6.1/config.def.h
+@@ -39,6 +39,7 @@ static const Layout layouts[] = {
+ 	{ "[]=",      tile },    /* first entry is default */
+ 	{ "><>",      NULL },    /* no layout function means floating behavior */
+ 	{ "[M]",      monocle },
++	{ "{M}",      centeredmonocle },
+ };
+ 
+ /* key definitions */
+@@ -74,6 +75,7 @@ static Key keys[] = {
+ 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
+ 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
+ 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
++	{ MODKEY,                       XK_n,      setlayout,      {.v = &layouts[3]} },
+ 	{ MODKEY,                       XK_space,  setlayout,      {0} },
+ 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
+ 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
+diff --git a/dwm-6.1/dwm.c b/dwm-centeredmonocle-6.1/dwm.c
+index 0362114..f6dd565 100644
+--- a/dwm-6.1/dwm.c
++++ b/dwm-centeredmonocle-6.1/dwm.c
+@@ -233,6 +233,7 @@ static int xerror(Display *dpy, XErrorEvent *ee);
+ static int xerrordummy(Display *dpy, XErrorEvent *ee);
+ static int xerrorstart(Display *dpy, XErrorEvent *ee);
+ static void zoom(const Arg *arg);
++static void centeredmonocle(Monitor *m);
+ 
+ /* variables */
+ static const char broken[] = "broken";
+@@ -2139,3 +2140,25 @@ main(int argc, char *argv[])
+ 	XCloseDisplay(dpy);
+ 	return EXIT_SUCCESS;
+ }
++
++void
++centeredmonocle(Monitor *m)
++{
++	unsigned int n = 0;
++	Client *c;
++
++	for (c = m->clients; c; c = c->next)
++		if (ISVISIBLE(c))
++			n++;
++	
++	if (n > 0) /* override layout symbol */
++		snprintf(m->ltsymbol, sizeof m->ltsymbol, "{%d}", n);
++
++	unsigned int mw = m->ww * m->mfact;
++	unsigned int mh = m->wh * 0.94;
++	unsigned int mx = (m->ww - mw) / 2;
++	unsigned int my = (m->wh - mh) / 2;
++
++	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
++		resize(c, m->wx + mx, m->wy + my, mw, mh, 0);
++}
